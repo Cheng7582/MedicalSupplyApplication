@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">MedicalSupplyApplication</string>
+
+    <string name="home">Home</string>
+    <string name="setting">Settings</string>
+    <string name="products">Products</string>
+    <string name="vision">vision</string>
+    <string name="register"><u>Sign up</u></string>
+
+    <string-array name="category">
+        <item>COVID-19 Medical Supplies</item>
+        <item>Diabetic Products &amp; Services</item>
+        <item>Patient Care</item>
+        <item>Durable Medical Equipment &amp; Supplies</item>
+    </string-array>
+
+</resources>

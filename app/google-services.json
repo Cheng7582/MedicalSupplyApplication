@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "658113595760",
+    "project_id": "medicalsupplyapplication-f3b06",
+    "storage_bucket": "medicalsupplyapplication-f3b06.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:658113595760:android:958893c983081bbdf9e7b5",
+        "android_client_info": {
+          "package_name": "com.example.medicalsupplyapplication"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_aCVoobOsnG62s01HWsG_WWwZbLBNTTo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

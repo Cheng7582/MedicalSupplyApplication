@@ -1,0 +1,74 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+
+    //Google Service
+    id("com.google.gms.google-services")
+
+//    Kotlin
+    id 'kotlin-kapt'
+}
+
+android {
+    namespace 'com.example.medicalsupplyapplication'
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "com.example.medicalsupplyapplication"
+        minSdk 24
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    buildFeatures{
+        dataBinding true
+        viewBinding true
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+}
+
+dependencies {
+
+    implementation 'androidx.core:core-ktx:1.8.0'
+    implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation 'com.google.android.material:material:1.5.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+
+    //Room
+    // Room and Lifecycle dependencies
+    implementation "androidx.room:room-runtime:2.5.2"
+    kapt "androidx.room:room-compiler:2.5.2"
+    // Kotlin Extensions and Coroutines support for Room
+    implementation "androidx.room:room-ktx:2.5.2"
+
+    //Firebase
+    implementation(platform("com.google.firebase:firebase-bom:32.3.1"))
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation 'com.google.firebase:firebase-storage-ktx:20.2.1'
+    //Authentication
+    implementation("com.google.firebase:firebase-auth-ktx")
+
+    //Recyclerview
+    implementation 'androidx.recyclerview:recyclerview:1.2.0'
+}
