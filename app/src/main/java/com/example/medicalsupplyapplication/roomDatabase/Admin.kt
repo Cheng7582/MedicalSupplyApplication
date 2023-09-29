@@ -8,6 +8,7 @@ import java.lang.reflect.Constructor
 @Entity(tableName = "admin")
 data class Admin(
     @PrimaryKey(autoGenerate = false)
+    @ColumnInfo(name = "adminID")
     val adminID: String,
 
     @ColumnInfo(name = "adminName")
