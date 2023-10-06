@@ -40,8 +40,8 @@ class PaymentActivity : AppCompatActivity() {
             if (cardNumber == "" ||!cardNumber.matches(Regex("^\\d{16}$"))) {
                 Toast.makeText(this, "Please Enter Valid Card Number.", Toast.LENGTH_SHORT).show()
                 binding.addCarNumber.requestFocus()
-            } else if (holderName == "") {
-                Toast.makeText(this, "Please Enter Card Holder Name.", Toast.LENGTH_SHORT).show()
+            } else if (holderName == ""||!holderName.matches(Regex("^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*\$"))) {
+                Toast.makeText(this, "Please Enter Valid Card Holder Name.", Toast.LENGTH_SHORT).show()
                 binding.addHolderName.requestFocus()
             } else if (expiryDate == ""|| !expiryDate.matches(Regex("^(0[1-9]|1[0-2])/(\\d{2})$")) ) {
                 Toast.makeText(this, "Please Enter Valid Expiry Date.", Toast.LENGTH_SHORT).show()
@@ -54,7 +54,7 @@ class PaymentActivity : AppCompatActivity() {
 
                 Database.db.collection("Cart").whereEqualTo("CustID",loginID).get().addOnSuccessListener {
                     val randomNumber = Random.nextInt(100_000, 1_000_000)
-                    val p0 = "PAY_${randomNumber.toString().padStart(5, '0')}"
+                    val p0 = "Pay_${randomNumber.toString().padStart(5, '0')}"
                     for(doc in it){
                         val cartID = doc.get("CartID").toString()
                         val prodID = doc.get("ProdID").toString()

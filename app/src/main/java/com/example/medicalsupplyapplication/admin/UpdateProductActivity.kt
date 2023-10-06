@@ -134,13 +134,14 @@ class UpdateProductActivity : AppCompatActivity() {
 
         binding.editProdBtn.setOnClickListener {
             val prodName = binding.editProdName.text.toString()
-            val prodPrice = Integer.parseInt(binding.editProdPrice.text.toString())
-            val prodStock = Integer.parseInt(binding.editProdStock.text.toString())
+            val prodPrice = binding.editProdPrice.text.toString()
+            val prodStock = binding.editProdStock.text.toString()
             val prodDesc = binding.editProdDesc.text.toString()
             val category = binding.categorySpinner.selectedItem.toString()
             val brand = binding.editBrand.text.toString()
             val fileName = "$getProdID.jpg"
             val storageReference = FirebaseStorage.getInstance().getReference("Product/$fileName")
+            val regex = Regex("^[1-9]\\d*\$")
 
             if (!::ImageUri.isInitialized) {
                 Toast.makeText(this, "Please Upload Image First.", Toast.LENGTH_SHORT).show()
@@ -148,11 +149,11 @@ class UpdateProductActivity : AppCompatActivity() {
             } else if (prodName == "") {
                 Toast.makeText(this, "Please Enter Product Name.", Toast.LENGTH_SHORT).show()
                 binding.editProdName.requestFocus()
-            } else if (prodPrice.toString() == "") {
-                Toast.makeText(this, "Please Enter Product Price.", Toast.LENGTH_SHORT).show()
+            } else if (prodPrice == "" || !regex.matches(prodPrice)) {
+                Toast.makeText(this, "Please Enter Valid Product Price.", Toast.LENGTH_SHORT).show()
                 binding.editProdPrice.requestFocus()
-            } else if (prodStock.toString() == "") {
-                Toast.makeText(this, "Please Enter Product Quantity.", Toast.LENGTH_SHORT).show()
+            } else if (prodStock == "" || !regex.matches(prodStock)) {
+                Toast.makeText(this, "Please Enter Valid Product Quantity.", Toast.LENGTH_SHORT).show()
                 binding.editProdStock.requestFocus()
             } else if (prodDesc == "") {
                 Toast.makeText(this, "Please Enter Product Description.", Toast.LENGTH_SHORT).show()
@@ -162,10 +163,9 @@ class UpdateProductActivity : AppCompatActivity() {
                 binding.editBrand.requestFocus()
             } else {
 
-                val product = Product(getProdID?:"",prodName,prodPrice,prodStock,prodDesc,brand, category, com.google.firebase.Timestamp.now())
+                val product = Product(getProdID?:"",prodName,Integer.parseInt(prodPrice),Integer.parseInt(prodStock),prodDesc,brand, category, com.google.firebase.Timestamp.now())
                 productViewModel.updateSingleProductOnline(product)
 
-//                ------------------------Here is the problem----------------------
                 if(synchronization.isNetworkAvailable(this)){
                     storageReference.putFile(ImageUri)
                         .addOnSuccessListener {
@@ -232,7 +232,11 @@ class UpdateProductActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 if(s.toString() != ""){
-                    productViewModel.product.value?.price = Integer.parseInt(s.toString())
+                    try{
+                        productViewModel.product.value?.price = Integer.parseInt(s.toString())
+                    }catch (e:NumberFormatException){
+                        productViewModel.product.value?.price = productViewModel.product.value?.price?:0
+                    }
                 }
             }
         })
@@ -242,7 +246,11 @@ class UpdateProductActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 if(s.toString() != ""){
-                    productViewModel.product.value?.stock = Integer.parseInt(s.toString())
+                    try{
+                        productViewModel.product.value?.stock = Integer.parseInt(s.toString())
+                    }catch(e:NumberFormatException){
+                        productViewModel.product.value?.stock = productViewModel.product.value?.stock?:0
+                    }
                 }
             }
         })

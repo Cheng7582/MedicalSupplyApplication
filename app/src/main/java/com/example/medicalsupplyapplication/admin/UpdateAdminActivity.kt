@@ -54,15 +54,16 @@ class UpdateAdminActivity : AppCompatActivity() {
             val adminPhone = binding.editAdminPhone.text.toString()
             val adminPass = binding.editAdminPass.text.toString()
             val adminConfPass = binding.editAdminConfPass.text.toString()
+            val phoneRegex = Regex("^0\\d{2}-\\d{7,8}$")
 
             if (adminName == "") {
                 Toast.makeText(this, "Please Enter Admin Name.", Toast.LENGTH_SHORT).show()
                 binding.editAdminName.requestFocus()
             } else if (adminEmail == "" || !Patterns.EMAIL_ADDRESS.matcher(adminEmail).matches()) {
-                Toast.makeText(this, "Please Enter Admin Email.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Please Enter Valid Admin Email.", Toast.LENGTH_SHORT).show()
                 binding.editAdminEmail.requestFocus()
-            } else if (adminPhone == "") {
-                Toast.makeText(this, "Please Enter Admin Phone Number.", Toast.LENGTH_SHORT).show()
+            } else if (adminPhone == "" || !phoneRegex.matches(adminPhone)) {
+                Toast.makeText(this, "Please Enter Valid Admin Phone Number.", Toast.LENGTH_SHORT).show()
                 binding.editAdminPhone.requestFocus()
             } else if (adminPass == "" || adminPass.length < 8) {
                 Toast.makeText(this, "Please Enter Password.", Toast.LENGTH_SHORT).show()
