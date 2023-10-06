@@ -56,15 +56,16 @@ class AddAdminActivity : AppCompatActivity() {
             val adminPhone = binding.addAdminPhone.text.toString()
             val adminPass = binding.addAdminPass.text.toString()
             val adminConfPass = binding.addAdminConfPass.text.toString()
+            val phoneRegex = Regex("^0\\d{2}-\\d{7,8}$")
 
             if(adminName == "") {
                 Toast.makeText(this, "Please Enter Admin Name.", Toast.LENGTH_SHORT).show()
                 binding.addAdminName.requestFocus()
             }else if(adminEmail == "" || !Patterns.EMAIL_ADDRESS.matcher(adminEmail).matches()) {
-                Toast.makeText(this, "Please Enter Admin Email.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Please Enter Valid Admin Email.", Toast.LENGTH_SHORT).show()
                 binding.addAdminEmail.requestFocus()
-            }else if(adminPhone == "") {
-                Toast.makeText(this, "Please Enter Admin Phone Number.", Toast.LENGTH_SHORT).show()
+            }else if(adminPhone == "" || !phoneRegex.matches(adminPhone)) {
+                Toast.makeText(this, "Please Enter Valid Admin Phone Number.", Toast.LENGTH_SHORT).show()
                 binding.addAdminPhone.requestFocus()
             }else if(adminPass == "" || adminPass.length < 8) {
                 Toast.makeText(this, "Please Enter Password with at least 8 character.", Toast.LENGTH_SHORT).show()

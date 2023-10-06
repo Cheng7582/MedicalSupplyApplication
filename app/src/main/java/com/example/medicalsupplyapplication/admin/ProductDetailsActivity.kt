@@ -4,13 +4,18 @@ import android.content.Intent
 import android.graphics.BitmapFactory
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.example.medicalsupplyapplication.Database
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import com.example.medicalsupplyapplication.databinding.ActivityProductDetailsBinding
+import com.example.medicalsupplyapplication.roomDatabase.Synchronization
+import com.example.medicalsupplyapplication.viewModel.ProductViewModel
 import com.google.firebase.storage.FirebaseStorage
 import java.io.File
 
 class ProductDetailsActivity : AppCompatActivity() {
     private lateinit var binding: ActivityProductDetailsBinding
+    private val synchronization = Synchronization()
+    private lateinit var productViewModel: ProductViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,25 +25,33 @@ class ProductDetailsActivity : AppCompatActivity() {
         val getProdID = intent.getStringExtra("getProdID")
         val getID = intent.getStringExtra("getID")
 
-        Database.db.collection("Product").whereEqualTo("ProductID", getProdID)
-            .get()
-            .addOnSuccessListener {
-                for (doc in it) {
-                    binding.showProdID.text = doc.get("ProductID").toString()
-                    binding.showProdName.text = doc.get("ProductName").toString()
-                    binding.showPrice.text = "RM " + doc.get("Price").toString()
-                    binding.showProdStock.text = doc.get("Stock").toString()
-                    binding.showBrand.text = doc.get("Brand").toString()
-                    binding.showCategory.text = doc.get("Category").toString()
-                    binding.showProdDesc.text = doc.get("Desc").toString()
-                }
-            }
+        productViewModel = ViewModelProvider(this).get(ProductViewModel::class.java)
 
-        val storageRef = FirebaseStorage.getInstance().reference.child("Product/$getProdID.jpg")
-        val localfile = File.createTempFile("tempImage", "jpg")
-        storageRef.getFile(localfile).addOnSuccessListener {
-            val bitmap = BitmapFactory.decodeFile(localfile.absolutePath)
-            binding.productImage.setImageBitmap(bitmap)
+        if(productViewModel.product.value == null){
+            if(synchronization.isNetworkAvailable(this)){
+                productViewModel.initOnlineProduct(getProdID?:"")
+            }
+        }
+
+        productViewModel.product.observe(this, Observer { newProduct ->
+            binding.showProdID.text = newProduct.productID
+            binding.showProdName.text = newProduct.productName
+            binding.showPrice.text = "RM " + newProduct.price.toString()
+            binding.showProdStock.text = newProduct.stock.toString()
+            binding.showBrand.text = newProduct.brand
+            binding.showCategory.text = newProduct.category
+            binding.showProdDesc.text = newProduct.desc
+
+        })
+
+        if(synchronization.isNetworkAvailable(this)){
+            //Get ProductImg
+            val storageRef = FirebaseStorage.getInstance().reference.child("Product/$getProdID.jpg")
+            val localfile = File.createTempFile("tempImage", "jpg")
+            storageRef.getFile(localfile).addOnSuccessListener {
+                val bitmap = BitmapFactory.decodeFile(localfile.absolutePath)
+                binding.productImage.setImageBitmap(bitmap)
+            }
         }
 
         binding.editProdBtn.setOnClickListener {

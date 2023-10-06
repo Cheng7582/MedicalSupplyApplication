@@ -1,7 +1,6 @@
 package com.example.medicalsupplyapplication.roomDatabase
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -10,44 +9,47 @@ import androidx.room.Update
 @Dao
 interface MedicalRoomDao {
 
-    //----------------------------------------------Admin
+    //------------------------------------------------------------Product
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAdmin(admin: Admin)
+    suspend fun insertProduct(product: Product)
 
     @Update
-    suspend fun updateAdmin(admin: Admin)
+    suspend fun updateProduct(product: Product)
 
-    @Query("SELECT * from admin WHERE adminID = :adminID")
-    suspend fun getAdmin(adminID: String): Admin?
+    @Query("SELECT * from product WHERE productID = :productID")
+    suspend fun getProduct(productID: String): Product?
 
-    @Query("DELETE FROM admin WHERE adminID = :adminID")
-    suspend fun deleteAdmin(adminID: String)
+    @Query("SELECT * from product")
+    suspend fun getAllProduct(): MutableList<Product>?
 
-    @Query("DELETE FROM admin")
-    suspend fun clearAdminTable()
+    @Query("DELETE FROM product WHERE productID = :productID")
+    suspend fun deleteProduct(productID: String)
 
-    //------------------------------------------------------------Cart
+    @Query("DELETE FROM product")
+    suspend fun clearProductTable()
 
+    @Query("SELECT COUNT(*) FROM product")
+    suspend fun getProductTableSize() : Int
+
+    //------------------------------------------------------------Order
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertCart(admin: Admin)
+    suspend fun insertOrder(order: Order)
 
     @Update
-    suspend fun updateCart(admin: Admin)
+    suspend fun updateOrder(order: Order)
 
-    @Query("SELECT * from admin WHERE adminID = :adminID")
-    suspend fun getCart(adminID: String): Admin?
+    @Query("SELECT * from 'order' WHERE orderID = :orderID")
+    suspend fun getOrder(orderID: String): Order?
 
-    @Query("DELETE FROM admin WHERE adminID = :adminID")
-    suspend fun deleteCart(adminID: String)
+    @Query("SELECT * from 'order'")
+    suspend fun getAllOrder(): MutableList<Order>?
 
-    @Query("DELETE FROM admin")
-    suspend fun clearCartTable()
+    @Query("DELETE FROM 'order' WHERE orderID = :orderID")
+    suspend fun deleteOrder(orderID: String)
 
-//    @Query("SELECT * FROM admin ORDER BY nightId DESC LIMIT 1")
-//    suspend fun getTonight(): SleepNight?
-//
-//    @Query("SELECT * FROM admin ORDER BY nightId DESC")
-//    fun getAllNights(): LiveData<List<SleepNight>>
+    @Query("DELETE FROM 'order'")
+    suspend fun clearOrderTable()
 
-
+    @Query("SELECT COUNT(*) FROM 'order'")
+    suspend fun getOrderTableSize() : Int
 }

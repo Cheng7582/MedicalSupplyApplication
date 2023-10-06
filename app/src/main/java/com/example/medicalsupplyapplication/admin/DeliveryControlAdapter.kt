@@ -55,12 +55,14 @@ class DeliveryControlAdapter(val context: DeliveryControlActivity, val items: Li
 
             itemView.setOnClickListener {
                 val position: Int = absoluteAdapterPosition
-                toDetail(ActivityActi, position)
+                val delivery = items?.get(position)
+
+                toDetail(ActivityActi, delivery?.getDID(), position)
             }
         }
     }
 
-    fun toDetail(ActivityAct: DeliveryControlActivity, index: Int) {
-        ActivityAct.toDetail(index)
+    fun toDetail(ActivityAct: DeliveryControlActivity, deliveryID: String?, index: Int) {
+        ActivityAct.toDetail(deliveryID, index)
     }
 }

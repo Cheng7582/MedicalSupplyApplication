@@ -5,24 +5,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.example.medicalsupplyapplication.Database
 import com.example.medicalsupplyapplication.R
-import java.text.SimpleDateFormat
-import java.util.Date
 
-class MonthlyReportAdapter(val context: MonthlyReportActivity, val items: HashMap<String, HashMap<String, Int>>) : RecyclerView.Adapter<MonthlyReportAdapter.ViewHolder>() {
+
+class MonthlyReportAdapter(var items: HashMap<String, HashMap<String, Int>>) : RecyclerView.Adapter<MonthlyReportAdapter.ViewHolder>() {
     companion object {
         private lateinit var activityActi: MonthlyReportActivity
-        var grandTotal: Int = 0
 
-        fun setFragment(activityActi: MonthlyReportActivity, items: HashMap<String, HashMap<String, Int>>) {
+        fun setFragment(activityActi: MonthlyReportActivity) {
             Companion.activityActi = activityActi
-
-            var amt: Int = 0
-            for (item in items.values){
-                amt += item["amt"] ?: 0
-                Companion.grandTotal = amt
-            }
         }
     }
 
@@ -42,44 +33,21 @@ class MonthlyReportAdapter(val context: MonthlyReportActivity, val items: HashMa
         val monthTotal = linkedHashMap.get(monthYearDateKey)?.get("amt")
         val monthQty = linkedHashMap.get(monthYearDateKey)?.get("qty")
 
+        holder.date.text = monthYearDateKey.toString()
+        holder.qty.text = monthQty.toString()
+        holder.price.text = "RM" + monthTotal.toString()
 
-
-/*        var qty = 0
-        var amount = 0
-        var tamo = 0
-        var conDate = ""
-
-        holder.date.text = item.getDate()
-
-        Database.db.collection("Order").get().addOnSuccessListener {
-            for (doc in it) {
-                var timestamp = doc["PayTime"] as com.google.firebase.Timestamp
-                val milliseconds = timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000
-                val sdf = SimpleDateFormat("dd/MM/yyyy")
-                val netDate = Date(milliseconds)
-                conDate = sdf.format(netDate).toString()
-
-                if (item.getDate() == conDate) {
-                    amount = Integer.parseInt(
-                        doc.get("ProdQty").toString()
-                    ) * Integer.parseInt(doc.get("ProdPrice").toString())
-                    qty += Integer.parseInt(doc.get("ProdQty").toString())
-                    tamo += amount
-                }
-            }*/
-
-            holder.date.text = monthYearDateKey.toString()
-            holder.qty.text = monthQty.toString()
-            holder.price.text = "RM" + monthTotal.toString()
-
-//            grandtotal += tamo
-
-            val monthRe: MonthlyReportActivity = context as MonthlyReportActivity
-            monthRe.setVariable(Companion.grandTotal)
         }
 
     override fun getItemCount(): Int {
         return items.size
+    }
+
+    fun updateData(newItems: HashMap<String, HashMap<String, Int>>) {
+        items.clear()
+        items.putAll(newItems)
+
+        notifyDataSetChanged()
     }
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

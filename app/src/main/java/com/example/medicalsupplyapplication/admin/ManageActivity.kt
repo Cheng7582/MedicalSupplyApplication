@@ -5,9 +5,11 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.ArrayAdapter
+import android.widget.Toast
 import com.example.medicalsupplyapplication.R
 import com.example.medicalsupplyapplication.customer.HomePageActivity
 import com.example.medicalsupplyapplication.databinding.ActivityManageBinding
+import com.example.medicalsupplyapplication.roomDatabase.Synchronization
 
 class ManageActivity : AppCompatActivity() {
     private lateinit var binding: ActivityManageBinding
@@ -15,10 +17,6 @@ class ManageActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityManageBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        val prod = ProductListActivity()
-        val adm = AdminListActivity()
-        val dls = DeliveryControlActivity()
 
         val loginID = intent.getStringExtra("getID")
 
@@ -55,34 +53,28 @@ class ManageActivity : AppCompatActivity() {
         manageList.adapter = arrayAdapter
 
         manageList.setOnItemClickListener { adapterView, view, position, l ->
+            val synchronization = Synchronization()
+
             if (position == 0) {
-                goOther(prod)
+                if(synchronization.isNetworkAvailable(this)){
+                    goOther(ProductListActivity())
+                }else{
+                    Toast.makeText(this, "Please ensure internet is available before manage product.", Toast.LENGTH_SHORT).show()
+                }
             } else if (position == 1) {
-                goOther(adm)
+                if(synchronization.isNetworkAvailable(this)){
+                    goOther(AdminListActivity())
+                }else{
+                    Toast.makeText(this, "Please ensure internet is available before manage admin.", Toast.LENGTH_SHORT).show()
+                }
             } else if (position == 2) {
-                goOther((dls))
+                if(synchronization.isNetworkAvailable(this)){
+                    goOther(DeliveryControlActivity())
+                }else{
+                    Toast.makeText(this, "Please ensure internet is available before manage delivery.", Toast.LENGTH_SHORT).show()
+                }
             }
         }
-
-        //See here still need or not
-/*        binding.myToolbar.setOnMenuItemClickListener {
-            when (it.itemId) {
-                R.id.ic_admin_list -> {
-                    val loginID = intent.getStringExtra("getID")
-                    val intent = Intent(this, AdminListActivity::class.java)
-                    intent.putExtra("getID", loginID)
-                    startActivity(intent)
-                }
-
-                R.id.ic_product_list -> {
-                    val loginID = intent.getStringExtra("getID")
-                    val intent = Intent(this, ProductListActivity::class.java)
-                    intent.putExtra("getID", loginID)
-                    startActivity(intent)
-                }
-            }
-            true
-        }*/
     }
 
     private fun goOther(activity: Activity) {

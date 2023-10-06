@@ -2,6 +2,7 @@ package com.example.medicalsupplyapplication
 
 import android.content.ContentValues
 import android.util.Log
+import com.example.medicalsupplyapplication.database.model.Product
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -40,6 +41,7 @@ class Database {
                         val netDate = Date(milliseconds)
                         val date = sdf.format(netDate).toString()
                         val dateValue = GetRegisterDate(date)
+
 
                         dates.add(dateValue)
                         customers.add(custData)

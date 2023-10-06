@@ -3,29 +3,35 @@ package com.example.medicalsupplyapplication.admin
 import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
+import android.view.View
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
-import androidx.core.graphics.drawable.toBitmap
-import com.example.medicalsupplyapplication.Database
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import com.example.medicalsupplyapplication.R
+import com.example.medicalsupplyapplication.database.model.Product
 import com.example.medicalsupplyapplication.databinding.ActivityUpdateProductBinding
-import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.SetOptions
+import com.example.medicalsupplyapplication.roomDatabase.Synchronization
+import com.example.medicalsupplyapplication.viewModel.ProductViewModel
 import com.google.firebase.storage.FirebaseStorage
 import java.io.File
-import java.io.FileOutputStream
 
 class UpdateProductActivity : AppCompatActivity() {
     private lateinit var binding: ActivityUpdateProductBinding
     private lateinit var ImageUri: Uri
+    private val synchronization = Synchronization()
+    private lateinit var productViewModel: ProductViewModel
+    private var spinnerSelection: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,69 +42,94 @@ class UpdateProductActivity : AppCompatActivity() {
         val getID = intent.getStringExtra("getID")
         val getPosition = intent.getIntExtra("getIndex", 0)
 
-        Database.db.collection("Product").whereEqualTo("ProductID", getProdID)
-            .get()
-            .addOnSuccessListener {
-                for (doc in it) {
-                    binding.editProdID.text = doc.get("ProductID").toString()
-                    binding.editProdName.setText(doc.get("ProductName").toString())
-                    binding.editProdPrice.setText(doc.get("Price").toString())
-                    binding.editProdStock.setText(doc.get("Stock").toString())
-                    binding.editBrand.setText(doc.get("Brand").toString())
-                    binding.editProdDesc.setText(doc.get("Desc").toString())
-                }
-            }
+        productViewModel = ViewModelProvider(this).get(ProductViewModel::class.java)
 
-        ArrayAdapter.createFromResource(this, R.array.category, android.R.layout.simple_spinner_item).also { adapter ->
+        if (productViewModel.product.value == null) {
+            if (synchronization.isNetworkAvailable(this)) {
+                productViewModel.initOnlineProduct(getProdID ?: "")
+            }
+        }
+
+        //Category Spinner
+        ArrayAdapter.createFromResource(
+            this,
+            R.array.category,
+            android.R.layout.simple_spinner_item
+        ).also { adapter ->
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             binding.categorySpinner.adapter = adapter
         }
 
-        binding.backToSArrow.setOnClickListener {
-            val intent = Intent(this, ProductDetailsActivity::class.java)
-            intent.putExtra("getProdID", getProdID)
-            intent.putExtra("getID", getID)
-            startActivity(intent)
-        }
+        binding.categorySpinner.onItemSelectedListener =
+            object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(
+                    parentView: AdapterView<*>,
+                    selectedItemView: View?,
+                    position: Int,
+                    id: Long
+                ) {
+                    val selectedCategory = parentView.getItemAtPosition(position).toString()
+                    spinnerSelection = position// Stored for later observer
+                    productViewModel.product.value?.category = selectedCategory
 
-        val storageRef = FirebaseStorage.getInstance().reference.child("Product/$getProdID.jpg")
-        val localfile = File.createTempFile("tempImage", "jpeg")
-        storageRef.getFile(localfile).addOnSuccessListener {
+                }
 
-            //set image to view
-            val bitmap = BitmapFactory.decodeFile(localfile.absolutePath)
-            binding.productImageButton.setImageBitmap(bitmap)
+                override fun onNothingSelected(parentView: AdapterView<*>) {}
+            }
 
-            //set image uri for later upload
-            ImageUri = Uri.fromFile(localfile)
-        }
+        productViewModel.product.observe(this, Observer { newProduct ->
+
+            binding.editProdID.text = newProduct.productID
+            binding.editProdName.setText(newProduct.productName)
+            binding.editProdPrice.setText(newProduct.price.toString())
+            binding.editProdStock.setText(newProduct.stock.toString())
+            binding.editBrand.setText(newProduct.brand)
+            binding.editProdDesc.setText(newProduct.desc)
+            binding.categorySpinner.setSelection(spinnerSelection)
+
+        })
 
         binding.takeImageBtn.isEnabled = false
+        if (synchronization.isNetworkAvailable(this)) {
+            val storageRef = FirebaseStorage.getInstance().reference.child("Product/$getProdID.jpg")
+            val localfile = File.createTempFile("tempImage", "jpeg")
+            storageRef.getFile(localfile).addOnSuccessListener {
 
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
-        {
-            ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.CAMERA), 111)
+                //set image to view
+                val bitmap = BitmapFactory.decodeFile(localfile.absolutePath)
+                binding.productImageButton.setImageBitmap(bitmap)
 
-        } else {
-            binding.takeImageBtn.isEnabled = true
-        }
+                //set image uri for later upload
+                ImageUri = Uri.fromFile(localfile)
+            }
 
-        binding.takeImageBtn.setOnClickListener {
-            val values = ContentValues()
-            values.put(MediaStore.Images.Media.TITLE, "New Avatar")
-            values.put(MediaStore.Images.Media.DESCRIPTION, "From Camera")
-            ImageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)!!
+            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
 
-            val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            intent.putExtra(MediaStore.EXTRA_OUTPUT, ImageUri)
-            startActivityForResult(intent, 100)
-        }
+                ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.CAMERA), 111)
 
-        binding.productImageButton.setOnClickListener {
-            val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-            intent.type = "image/*"
+            } else {
+                binding.takeImageBtn.isEnabled = true
+            }
 
-            startActivityForResult(intent, 101)
+            binding.takeImageBtn.setOnClickListener {
+                val values = ContentValues()
+                values.put(MediaStore.Images.Media.TITLE, "New Avatar")
+                values.put(MediaStore.Images.Media.DESCRIPTION, "From Camera")
+                ImageUri =
+                    contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)!!
+
+                val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, ImageUri)
+                startActivityForResult(intent, 100)
+            }
+
+            binding.productImageButton.setOnClickListener {
+                val intent =
+                    Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+                intent.type = "image/*"
+
+                startActivityForResult(intent, 101)
+            }
         }
 
         binding.editProdBtn.setOnClickListener {
@@ -131,38 +162,40 @@ class UpdateProductActivity : AppCompatActivity() {
                 binding.editBrand.requestFocus()
             } else {
 
-                Database.updateProduct(
-                    getProdID.toString(),
-                    prodName,
-                    prodPrice,
-                    prodStock,
-                    prodDesc,
-                    category,
-                    brand,
-                    getPosition
-                )
+                val product = Product(getProdID?:"",prodName,prodPrice,prodStock,prodDesc,brand, category, com.google.firebase.Timestamp.now())
+                productViewModel.updateSingleProductOnline(product)
 
-                Log.e("Checking", ImageUri.toString())
 //                ------------------------Here is the problem----------------------
-                storageReference.putFile(ImageUri)
-                    .addOnSuccessListener {
-                        binding.productImageButton.setImageURI(null)
-                    }
-                    .addOnFailureListener {exception ->
-                        Toast.makeText(this, "Failed to upload image", Toast.LENGTH_LONG).show()
-                        Log.e("StorageError", "Image upload failed", exception)
-                    }
-                    .addOnCompleteListener {
+                if(synchronization.isNetworkAvailable(this)){
+                    storageReference.putFile(ImageUri)
+                        .addOnSuccessListener {
+                            binding.productImageButton.setImageURI(null)
+                        }
+                        .addOnFailureListener { exception ->
+                            Toast.makeText(this, "Failed to upload image", Toast.LENGTH_LONG).show()
+                            Log.e("StorageError", "Image upload failed", exception)
+                        }
+                        .addOnCompleteListener {
+                            Toast.makeText(this, "Updated Successful!", Toast.LENGTH_LONG).show()
+                        }
+                }
 
-                        Toast.makeText(this, "Updated Successful!", Toast.LENGTH_LONG).show()
-                        val intent = Intent(this, ProductDetailsActivity::class.java)
-                        intent.putExtra("getIndex", getPosition)
-                        intent.putExtra("getID", getID)
-                        intent.putExtra("getProdID", getProdID)
-                        startActivity(intent)
-                    }
+                val intent = Intent(this, ProductDetailsActivity::class.java)
+                intent.putExtra("getIndex", getPosition)
+                intent.putExtra("getID", getID)
+                intent.putExtra("getProdID", getProdID)
+                startActivity(intent)
             }
         }
+
+        binding.backToSArrow.setOnClickListener {
+            val intent = Intent(this, ProductDetailsActivity::class.java)
+            intent.putExtra("getProdID", getProdID)
+            intent.putExtra("getID", getID)
+            startActivity(intent)
+        }
+
+        setTextChangedListener()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -182,5 +215,52 @@ class UpdateProductActivity : AppCompatActivity() {
         if (requestCode == 111 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             binding.takeImageBtn.isEnabled = true
         }
+    }
+
+    private fun setTextChangedListener(){
+        //Update viewModel when user edit
+        binding.editProdName.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun afterTextChanged(s: Editable?) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                productViewModel.product.value?.productName = s.toString()
+            }
+        })
+
+        binding.editProdPrice.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun afterTextChanged(s: Editable?) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if(s.toString() != ""){
+                    productViewModel.product.value?.price = Integer.parseInt(s.toString())
+                }
+            }
+        })
+
+        binding.editProdStock.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun afterTextChanged(s: Editable?) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if(s.toString() != ""){
+                    productViewModel.product.value?.stock = Integer.parseInt(s.toString())
+                }
+            }
+        })
+
+        binding.editBrand.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun afterTextChanged(s: Editable?) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                productViewModel.product.value?.brand = s.toString()
+            }
+        })
+
+        binding.editProdDesc.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun afterTextChanged(s: Editable?) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                productViewModel.product.value?.desc = s.toString()
+            }
+        })
     }
 }

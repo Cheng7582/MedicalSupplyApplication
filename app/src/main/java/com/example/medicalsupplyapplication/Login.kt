@@ -8,17 +8,22 @@ import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
 import android.widget.TextView
 import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
 import com.example.medicalsupplyapplication.admin.DashboardActivity
 import com.example.medicalsupplyapplication.customer.*
 import com.example.medicalsupplyapplication.databinding.ActivityLoginBinding
+import com.example.medicalsupplyapplication.roomDatabase.Synchronization
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 
 class Login : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
     private lateinit var auth: FirebaseAuth
+    private val coroutineScope: CoroutineScope = lifecycleScope
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,7 +55,13 @@ class Login : AppCompatActivity() {
         }
 
         binding.loginBtn.setOnClickListener {
-            onClick()
+            val synchronization = Synchronization()
+
+            if(synchronization.isNetworkAvailable(this)){
+                coroutineScope.launch { onClick() }
+            }else{
+                Toast.makeText(this, "Ops you are offline!!", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -64,66 +75,61 @@ class Login : AppCompatActivity() {
     }
 
 
-    fun onClick() {
-
-        var loginUnsucess: Boolean = false
+    suspend fun onClick() {
 
         val email = binding.enterCustID.text.toString()
         val password = binding.enterPass.text.toString()
 
-        Database.db.collection("Customer").whereEqualTo("Email", email).get().addOnSuccessListener {
-            for (doc in it) {
-                if (doc.get("Status") == "Active") {
-                    auth.signInWithEmailAndPassword(email, password).addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            Database.db.collection("Customer").whereEqualTo("Email", email).get()
-                                .addOnSuccessListener {
-                                    for (doc in it) {
-                                        val user = Firebase.auth.currentUser
 
-                                        Toast.makeText(
-                                            this,
-                                            "Login Successful!",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                        val intent = Intent(this, HomePageActivity::class.java)
-                                        val custID = doc.get("CustID").toString()
-                                        intent.putExtra("getID", custID)
-                                        Database.db.collection("Customer").document(custID)
-                                            .update(
-                                                "Password", password,
-                                                "ConfirmPass", password
-                                            )
-                                            .addOnSuccessListener {
-                                                startActivity(intent)
-                                                loginUnsucess = true
-                                            }
+        val isCustLoginSuccess = coroutineScope.async {
+            val customerSnapshot =
+                Database.db.collection("Customer").whereEqualTo("Email", email).get().await()
 
-                                    }
-                                }
-                        }
-                    }.addOnFailureListener {
-                        Toast.makeText(this, "Email or Password Incorrect!!!", Toast.LENGTH_SHORT)
-                            .show()
-                    }
-                } else if (doc.get("Status") == "Inactive") {
-                    Toast.makeText(this, "Account Inactive!", Toast.LENGTH_SHORT).show()
-                    binding.enterCustID.requestFocus()
+            for (customerDoc in customerSnapshot) {
+                if (customerDoc.get("Status") == "Active" && password == customerDoc.data["Password"].toString()) {
+                    return@async arrayOf(true, customerDoc.get("CustID").toString())
                 }
             }
+
+            return@async arrayOf(false, null)
         }
 
 
-        for (admin in Database.admins) {
-            if (admin.getID() == binding.enterCustID.text.toString() && admin.getPassword() == binding.enterPass.text.toString()) {
-                val ID = binding.enterCustID.text.toString()
-                Toast.makeText(this, "Login Successful!", Toast.LENGTH_SHORT).show()
-                val intent = Intent(this, DashboardActivity::class.java)
-                intent.putExtra("getID", ID)
-                startActivity(intent)
-                loginUnsucess = true
+        val isAdminLoginSuccess = coroutineScope.async {
+            val adminSnapshot =
+                Database.db.collection("Admin").whereEqualTo("AdminID", email).get().await()
+
+            for (adminDoc in adminSnapshot) {
+                if (password == adminDoc.data["Password"].toString()) {
+                    return@async arrayOf(true, adminDoc.data["AdminID"].toString())
+                }
             }
+
+            return@async arrayOf(false, null)
         }
+
+        val custResult = isCustLoginSuccess.await()
+        val adminResult = isAdminLoginSuccess.await()
+
+        if (custResult[0] as Boolean) {
+            Toast.makeText(this, "Customer Login Successful!", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, HomePageActivity::class.java)
+            val custID = custResult[1].toString()
+            intent.putExtra("getID", custID)
+            startActivity(intent)
+
+        } else if (adminResult[0] as Boolean) {
+            Toast.makeText(this, "Admin Login Successful!", Toast.LENGTH_SHORT).show()
+
+            val intent = Intent(this, DashboardActivity::class.java)
+            intent.putExtra("getID", adminResult.toString())
+            startActivity(intent)
+
+        } else {
+            Toast.makeText(this, "Email or Password Incorrect!!!", Toast.LENGTH_SHORT).show()
+        }
+
 
     }
+
 }

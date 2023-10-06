@@ -4,8 +4,10 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 
-@Database(entities = [Admin::class], version = 1, exportSchema = false)
+@Database(entities = [Product::class, Order::class], version = 4, exportSchema = false)
+@TypeConverters(Converters::class)
 abstract class MedicalRoomDatabase : RoomDatabase() {
 
     abstract val medicalRoomDao: MedicalRoomDao

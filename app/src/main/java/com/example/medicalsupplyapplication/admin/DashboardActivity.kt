@@ -3,9 +3,12 @@ package com.example.medicalsupplyapplication.admin
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.lifecycle.lifecycleScope
 import com.example.medicalsupplyapplication.R
 import com.example.medicalsupplyapplication.customer.HomePageActivity
 import com.example.medicalsupplyapplication.databinding.ActivityDashboardBinding
+import com.example.medicalsupplyapplication.roomDatabase.Synchronization
+import kotlinx.coroutines.launch
 
 class DashboardActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDashboardBinding
@@ -16,6 +19,17 @@ class DashboardActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         val loginID = intent.getStringExtra("getID")
+
+
+        //If network available sync record to room for offline purpose
+        val synchronization = Synchronization()
+        if(synchronization.isNetworkAvailable(this)){
+            val coroutineScope = lifecycleScope
+            lifecycleScope.launch {
+                synchronization.syncProductDataToRoom(applicationContext, coroutineScope)
+                synchronization.syncOrderDataToRoom(applicationContext, coroutineScope)
+            }
+        }
 
         binding.bottomNavigation.setOnNavigationItemSelectedListener {
             when (it.itemId) {

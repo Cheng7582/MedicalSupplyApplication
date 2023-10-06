@@ -23,8 +23,7 @@ class DeliveryDetailsActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         val getID = intent.getStringExtra("getID")
-        val getIndex = intent.getIntExtra("getIndex", 0)
-        val deliveryID = Database.deliverys[getIndex].getDID()
+        val deliveryID = intent.getStringExtra("getDeliveryID")
 
         binding.backToSArrow.setOnClickListener {
             val intent = Intent(this, DeliveryControlActivity::class.java)
@@ -37,17 +36,20 @@ class DeliveryDetailsActivity : AppCompatActivity() {
         Database.db.collection("Delivery").whereEqualTo("DeliveryID", deliveryID)
             .get()
             .addOnSuccessListener {
-                for (doc in it) {
+                for (deliveryDoc in it) {
                     binding.deID.text = deliveryID
-                    binding.dePayID.text = doc.get("PayID").toString()
-                    binding.deStatus.text = doc.get("Status").toString()
-                    for (cust in Database.customers) {
-                        if (cust.getID() == doc.get("CustID").toString()) {
-                            binding.deUsername.text = cust.getName()
-                            binding.dephone.text = cust.getPhone()
-                            binding.deAdd.text = cust.getAddress()
+                    binding.dePayID.text = deliveryDoc.get("PayID").toString()
+                    binding.deStatus.text = deliveryDoc.get("Status").toString()
+
+                    Database.db.collection("Customer").whereEqualTo("CustID", deliveryDoc.get("CustID").toString())
+                        .get()
+                        .addOnSuccessListener {
+                            for (custDoc in it){
+                                binding.deUsername.text = custDoc.get("Username").toString()
+                                binding.dephone.text = custDoc.get("Phone").toString()
+                                binding.deAdd.text = custDoc.get("Address").toString()
+                            }
                         }
-                    }
                 }
                 Database.db.collection("Order")
                     .whereEqualTo("PaymentID", binding.dePayID.text.toString())
@@ -106,7 +108,7 @@ class DeliveryDetailsActivity : AppCompatActivity() {
                             ).addOnSuccessListener {
                                 val intent = Intent(this, DeliveryDetailsActivity::class.java)
                                 intent.putExtra("getID", getID)
-                                intent.putExtra("getIndex", getIndex)
+                                intent.putExtra("getDeliveryID", deliveryID)
                                 startActivity(intent)
                                 finish()
                             }
@@ -127,7 +129,7 @@ class DeliveryDetailsActivity : AppCompatActivity() {
                             ).addOnSuccessListener {
                                 val intent = Intent(this, DeliveryDetailsActivity::class.java)
                                 intent.putExtra("getID", getID)
-                                intent.putExtra("getIndex", getIndex)
+                                intent.putExtra("getDeliveryID", deliveryID)
                                 startActivity(intent)
                                 finish()
                             }
@@ -148,7 +150,7 @@ class DeliveryDetailsActivity : AppCompatActivity() {
                             ).addOnSuccessListener {
                                 val intent = Intent(this, DeliveryDetailsActivity::class.java)
                                 intent.putExtra("getID", getID)
-                                intent.putExtra("getIndex", getIndex)
+                                intent.putExtra("getDeliveryID", deliveryID)
                                 startActivity(intent)
                                 finish()
                             }
@@ -169,7 +171,7 @@ class DeliveryDetailsActivity : AppCompatActivity() {
                             ).addOnSuccessListener {
                                 val intent = Intent(this, DeliveryDetailsActivity::class.java)
                                 intent.putExtra("getID", getID)
-                                intent.putExtra("getIndex", getIndex)
+                                intent.putExtra("getDeliveryID", deliveryID)
                                 startActivity(intent)
                                 finish()
                             }

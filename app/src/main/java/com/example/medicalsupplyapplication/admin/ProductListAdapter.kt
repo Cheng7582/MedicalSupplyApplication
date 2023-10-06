@@ -7,8 +7,9 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.medicalsupplyapplication.R
+import com.example.medicalsupplyapplication.database.model.Product
 
-class ProductListAdapter(val context: ProductListActivity, val items: List<prodList>) :
+class ProductListAdapter(val context: ProductListActivity, var products: MutableList<Product>?) :
     RecyclerView.Adapter<ProductListAdapter.ViewHolder>() {
     companion object {
         private var getLoginID: String = ""
@@ -31,13 +32,13 @@ class ProductListAdapter(val context: ProductListActivity, val items: List<prodL
 
     override fun onBindViewHolder(holder: ProductListAdapter.ViewHolder, position: Int) {
         val indexNum = position + 1
-        val item = items.get(position)
+        val product = products?.get(position)
 
         holder.index.text = indexNum.toString()
-        holder.id.text = item.getName()
-        holder.name.text = item.getStock().toString()
+        holder.id.text = product?.productName
+        holder.name.text = product?.stock.toString()
 
-        if (item.getStock() <= 30) {
+        if (product?.stock?:0 <= 30) {
             holder.name.setTextColor(Color.RED)
         }else{
             holder.name.setTextColor(Color.BLACK)
@@ -45,7 +46,7 @@ class ProductListAdapter(val context: ProductListActivity, val items: List<prodL
     }
 
     override fun getItemCount(): Int {
-        return items.size
+        return products?.size?:0
     }
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -60,13 +61,20 @@ class ProductListAdapter(val context: ProductListActivity, val items: List<prodL
 
             itemView.setOnClickListener {
                 val position: Int = absoluteAdapterPosition
-                val item = items.get(position)
-                toDetail(ActivityActi, item.getID(), position)
+                val product = products?.get(position)
+                toDetail(ActivityActi, product?.productID, position)
             }
         }
     }
 
-    fun toDetail(ActivityAct: ProductListActivity, index: String, position: Int) {
-        ActivityAct.toDetail(index, position)
+    fun updateData(newProducts: MutableList<Product>?) {
+        products?.clear()
+        products = newProducts
+
+        notifyDataSetChanged()
+    }
+
+    fun toDetail(ActivityAct: ProductListActivity, productID: String?, position: Int) {
+        ActivityAct.toDetail(productID?:"", position)
     }
 }

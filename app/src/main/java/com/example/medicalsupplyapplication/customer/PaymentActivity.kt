@@ -53,6 +53,8 @@ class PaymentActivity : AppCompatActivity() {
                 val loginID = intent.getStringExtra("getID")
 
                 Database.db.collection("Cart").whereEqualTo("CustID",loginID).get().addOnSuccessListener {
+                    val randomNumber = Random.nextInt(100_000, 1_000_000)
+                    val p0 = "PAY_${randomNumber.toString().padStart(5, '0')}"
                     for(doc in it){
                         val cartID = doc.get("CartID").toString()
                         val prodID = doc.get("ProdID").toString()
@@ -60,8 +62,6 @@ class PaymentActivity : AppCompatActivity() {
                         val prodPrice = Integer.parseInt(doc.get("ProdPrice").toString())
                         val qty = Integer.parseInt(doc.get("Qty").toString())
 
-                        val randomNumber = Random.nextInt(100_000, 1_000_000)
-                        val p0 = "PAY_${randomNumber.toString().padStart(5, '0')}"
 
                         val idNum = Database.orders.size
                         val orderID = "OD" + String.format("%04d",(idNum +1))

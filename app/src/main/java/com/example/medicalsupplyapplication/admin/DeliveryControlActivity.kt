@@ -51,10 +51,10 @@ class DeliveryControlActivity : AppCompatActivity() {
         }
     }
 
-    fun toDetail(index: Int) {
+    fun toDetail(deliveryID: String?, index: Int) {
         val getLoginID = intent.getStringExtra("getID")
         val intent = Intent(this, DeliveryDetailsActivity::class.java)
-        intent.putExtra("getIndex", index)
+        intent.putExtra("getDeliveryID", deliveryID)
         intent.putExtra("getID", getLoginID)
         startActivity(intent)
     }

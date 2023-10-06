@@ -10,11 +10,12 @@ import android.widget.*
 import androidx.recyclerview.widget.RecyclerView
 import com.example.medicalsupplyapplication.Database
 import com.example.medicalsupplyapplication.R
+import com.example.medicalsupplyapplication.database.model.Cart
 import com.google.firebase.storage.FirebaseStorage
 import java.io.File
 import java.lang.Integer.parseInt
 
-class CartAdapter(val context: CartActivity, val items: List<cartlist>): RecyclerView.Adapter<CartAdapter.ViewHolder>()  {
+class CartAdapter(val context: CartActivity, val items: MutableList<Cart>): RecyclerView.Adapter<CartAdapter.ViewHolder>()  {
 
     companion object{
         private var getLoginID: String = ""
@@ -40,7 +41,7 @@ class CartAdapter(val context: CartActivity, val items: List<cartlist>): Recycle
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = items.get(position)
 
-        val prodID = item.getProdID()
+        val prodID = item.prodID
         Log.e("checkProdID", prodID)
         val storageRef = FirebaseStorage.getInstance().reference.child("Product/$prodID.jpg")
         val localfile = File.createTempFile("tempImage", "jpeg")
@@ -48,17 +49,17 @@ class CartAdapter(val context: CartActivity, val items: List<cartlist>): Recycle
             val bitmap = BitmapFactory.decodeFile(localfile.absolutePath)
             holder.prodImg.setImageBitmap(bitmap)
         }
-        holder.name.text = item.getProdName()
-        holder.price.text = "RM " + item.getProdPrice()
-        holder.qty.text = item.getProdQty().toString()
-        setQty = item.getProdQty()
+        holder.name.text = item.prodName
+        holder.price.text = "RM " + item.prodPrice
+        holder.qty.text = item.prodQty.toString()
 
         holder.addBtn.setOnClickListener {
-            Database.db.collection("Product").whereEqualTo("ProductName",item.getProdName()).get().addOnSuccessListener {
+            Database.db.collection("Product").whereEqualTo("ProductName",item.prodName).get().addOnSuccessListener {
                 for(doc in it){
                     if(setQty < parseInt(doc.get("Stock").toString())){
+                        setQty = item.prodQty
                         setQty += 1
-                        Database.db.collection("Cart").document(item.getCartID())
+                        Database.db.collection("Cart").document(item.cartID)
                             .update("Qty", setQty)
                             .addOnSuccessListener {
                                 Log.d(ContentValues.TAG, "DocumentSnapshot successfully!")
@@ -77,8 +78,9 @@ class CartAdapter(val context: CartActivity, val items: List<cartlist>): Recycle
         }
 
         holder.minusBtn.setOnClickListener {
+            setQty = item.prodQty
             setQty -= 1
-            Database.db.collection("Cart").document(item.getCartID())
+            Database.db.collection("Cart").document(item.cartID)
                 .update("Qty", setQty)
                 .addOnSuccessListener {
                     Log.d(ContentValues.TAG, "DocumentSnapshot successfully!")
@@ -91,7 +93,7 @@ class CartAdapter(val context: CartActivity, val items: List<cartlist>): Recycle
         }
 
         holder.deleteBtn.setOnClickListener{
-            Database.db.collection("Cart").document(item.getCartID())
+            Database.db.collection("Cart").document(item.cartID)
                 .delete()
                 .addOnSuccessListener {
                     Log.d(ContentValues.TAG, "DocumentSnapshot successfully!")

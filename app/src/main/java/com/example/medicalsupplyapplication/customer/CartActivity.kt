@@ -6,10 +6,14 @@ import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.medicalsupplyapplication.Database
 import com.example.medicalsupplyapplication.databinding.ActivityCartBinding
+import com.example.medicalsupplyapplication.viewModel.CartViewModel
+import com.example.medicalsupplyapplication.viewModel.ProductViewModel
 import java.lang.Integer.parseInt
 
 
@@ -17,6 +21,7 @@ class CartActivity : AppCompatActivity() {
     private var layoutManager: RecyclerView.LayoutManager? = null
     private var adapter: RecyclerView.Adapter<CartAdapter.ViewHolder>? = null
     private lateinit var binding: ActivityCartBinding
+    private lateinit var cartViewModel: CartViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,43 +41,36 @@ class CartActivity : AppCompatActivity() {
             setNewPage(product)
         }
 
-
-
         val loginID = intent.getStringExtra("getID")
         var tAmount = 0
 
         var cartList: MutableList<cartlist> = mutableListOf()
 
-        Database.db.collection("Cart").whereEqualTo("CustID",loginID).get().addOnSuccessListener {
-            for(doc in it){
-                val cartID = doc.get("CartID").toString()
-                val prodID = doc.get("ProdID").toString()
-                val custID = doc.get("CustID").toString()
-                val prodName = doc.get("ProdName").toString()
-                val prodPrice = parseInt(doc.get("ProdPrice").toString())
-                val qty = parseInt(doc.get("Qty").toString())
-                var newCartList = cartlist(cartID,prodID,custID,prodName,prodPrice,qty)
-                tAmount += (prodPrice*qty)
-                cartList.add(newCartList)
+        cartViewModel = ViewModelProvider(this).get(CartViewModel::class.java)
+        if(cartViewModel.cartList.value == null){
+            cartViewModel.initOnlineCartList(loginID?:"")
+        }
+
+        layoutManager = LinearLayoutManager(this)
+        binding.recycleViewCart.layoutManager = layoutManager
+        CartAdapter.setFragment(loginID.toString(),this)
+
+        cartViewModel.cartList.observe(this, Observer{ newCart ->
+            for(item in newCart){
+                tAmount += (item.prodPrice * item.prodQty)
             }
+
             binding.showAmount.text = "RM" + tAmount
-
-            layoutManager = LinearLayoutManager(this)
-
-            binding.recycleViewCart.layoutManager = layoutManager
-
-            CartAdapter.setFragment(loginID.toString(),this)
-
-            adapter = CartAdapter(this, cartList)
-
+            adapter = CartAdapter(this, newCart)
             binding.recycleViewCart.adapter = adapter
 
-            if(cartList.isEmpty()){
+            if(newCart.isEmpty()){
                 binding.emptyMessage.visibility = View.VISIBLE
             }else{
                 binding.emptyMessage.visibility = View.GONE
             }
-        }
+        })
+
 
         var paymentAmount = 0
         var custEmail = ""

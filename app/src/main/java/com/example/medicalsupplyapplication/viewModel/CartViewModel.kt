@@ -1,41 +1,51 @@
 package com.example.medicalsupplyapplication.viewModel
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.ViewModel
-import com.example.medicalsupplyapplication.Carts
-import com.example.medicalsupplyapplication.Database
+import com.example.medicalsupplyapplication.database.model.Cart
 
-class CartViewModel : ViewModel() {
+class CartViewModel (private val cartRepository: CartRepository) : ViewModel(){
 
-    private var _cartObjects = MutableLiveData<MutableList<Carts>>()
+    private var _cart: MediatorLiveData<Cart> = MediatorLiveData()
+    var cart: MediatorLiveData<Cart>
+        get() = _cart
+        set(value){
+            _cart = value
+        }
 
+    private var _cartList: MediatorLiveData<MutableList<Cart>> = MediatorLiveData()
+    var cartList: MediatorLiveData<MutableList<Cart>>
+        get() = _cartList
+        set(value) {
+            _cartList = value
+        }
 
-    val cartID: LiveData<MutableList<Carts>> get() = _cartObjects
+    constructor() : this(CartRepository()) {
+    }
 
     init {
+        _cartList.addSource(cartRepository.getCartList()){ newCartList->
+            _cartList.value = newCartList
+        }
 
+        _cart.addSource(cartRepository.getCart()){ newCart->
+            _cart.value = newCart
+        }
     }
 
-    fun getFromRemoteDatabase(cartID: String) {
-        Database.db.collection("Cart")
-            .get()
-            .addOnSuccessListener { cartDatabase ->
-                for (cart in cartDatabase) {
-                    val cartID: String = cart.data["CartID"].toString()
-                    val prodID: String = cart.data["ProdID"].toString()
-                    val custID: String = cart.data["CustID"].toString()
-                    val prodName: String = cart.data["ProdName"].toString()
-                    val prodPrice: Int = Integer.parseInt(cart.data["ProdPrice"].toString())
-                    val prodQty: Int = Integer.parseInt(cart.data["Qty"].toString())
-                    val idNum: Int = Integer.parseInt(cart.data["idNum"].toString())
-                    val cart = Carts(cartID, prodID, custID, prodName, prodPrice, prodQty, idNum)
-                    _cartObjects.value?.add(cart)
-                }
-            }
+    fun initOnlineCartList(custID: String) {
+        cartRepository.getCartListFirestore(custID)
     }
 
+    fun initOnlineCart(prodID: String, custID: String) {
+        cartRepository.getSingleCartFirestore(prodID, custID)
+    }
 
+    fun addSingleCartOnline(cart: Cart){
+        cartRepository.addSingleCartFirestore(cart)
+    }
 
-
+    fun updateSingleCartOnline(cart: Cart){
+        cartRepository.updateSingleCartFirestore(cart)
+    }
 }

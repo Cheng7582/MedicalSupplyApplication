@@ -19,85 +19,97 @@ class ResetPasswordActivity : AppCompatActivity() {
         binding = ActivityResetPasswordBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val reset = Firebase.auth.currentUser
         val custID = intent.getStringExtra("getID")
 
-        var boolean: Boolean = false
+        var boolean: Boolean = true
 
         binding.showCurrentPass.setOnClickListener {
-            if(binding.showCurrentPass.contentDescription.toString().equals("show")){
-                binding.editCurrentPassword.transformationMethod = HideReturnsTransformationMethod.getInstance()
+            if (binding.showCurrentPass.contentDescription.toString().equals("show")) {
+                binding.editCurrentPassword.transformationMethod =
+                    HideReturnsTransformationMethod.getInstance()
                 binding.showCurrentPass.contentDescription = "Hide"
-            } else{
-                binding.editCurrentPassword.transformationMethod = PasswordTransformationMethod.getInstance()
+            } else {
+                binding.editCurrentPassword.transformationMethod =
+                    PasswordTransformationMethod.getInstance()
                 binding.showCurrentPass.contentDescription = "show"
             }
         }
 
         binding.showNewPass.setOnClickListener {
-            if(binding.showNewPass.contentDescription.toString().equals("show")){
-                binding.enterNewPass.transformationMethod = HideReturnsTransformationMethod.getInstance()
+            if (binding.showNewPass.contentDescription.toString().equals("show")) {
+                binding.enterNewPass.transformationMethod =
+                    HideReturnsTransformationMethod.getInstance()
                 binding.showNewPass.contentDescription = "Hide"
-            } else{
-                binding.enterNewPass.transformationMethod = PasswordTransformationMethod.getInstance()
+            } else {
+                binding.enterNewPass.transformationMethod =
+                    PasswordTransformationMethod.getInstance()
                 binding.showNewPass.contentDescription = "show"
             }
         }
 
         binding.showConfPass.setOnClickListener {
-            if(binding.showConfPass.contentDescription.toString().equals("show")){
-                binding.enterConfPass.transformationMethod = HideReturnsTransformationMethod.getInstance()
+            if (binding.showConfPass.contentDescription.toString().equals("show")) {
+                binding.enterConfPass.transformationMethod =
+                    HideReturnsTransformationMethod.getInstance()
                 binding.showConfPass.contentDescription = "Hide"
-            } else{
-                binding.enterConfPass.transformationMethod = PasswordTransformationMethod.getInstance()
+            } else {
+                binding.enterConfPass.transformationMethod =
+                    PasswordTransformationMethod.getInstance()
                 binding.showConfPass.contentDescription = "show"
             }
         }
 
-        binding.confirmBtn.setOnClickListener{
+        binding.confirmBtn.setOnClickListener {
             val currentPass = binding.editCurrentPassword.text.toString()
             val newPass = binding.enterNewPass.text.toString()
             val newConfPass = binding.enterConfPass.text.toString()
 
-            if(currentPass == ""){
+            if (currentPass == "") {
                 Toast.makeText(this, "Please Enter Current Password.", Toast.LENGTH_SHORT).show()
                 binding.editCurrentPassword.requestFocus()
-            }else if(newPass == ""){
+            } else if (newPass == "") {
                 Toast.makeText(this, "Please Enter New Password.", Toast.LENGTH_SHORT).show()
                 binding.enterNewPass.requestFocus()
-            }else if(newConfPass == ""){
+            } else if (newConfPass == "") {
                 Toast.makeText(this, "Please Enter Confirm Password.", Toast.LENGTH_SHORT).show()
                 binding.enterConfPass.requestFocus()
-            }else if(newPass != newConfPass){
-                Toast.makeText(this, "New Password and Confirm Password must be same.", Toast.LENGTH_SHORT).show()
+            } else if (newPass != newConfPass) {
+                Toast.makeText(
+                    this,
+                    "New Password and Confirm Password must be same.",
+                    Toast.LENGTH_SHORT
+                ).show()
                 binding.enterConfPass.requestFocus()
-            }else{
-                for(it in Database.customers){
-                    if(custID == it.getID() && currentPass == it.getPassword()){
-                        reset!!.updatePassword(newPass).addOnCompleteListener{ task ->
-                            if(task.isSuccessful){
-                                Database.db.collection("Customer").document(custID)
-                                    .update("Password",newPass,
-                                        "ConfirmPass",newConfPass)
-                                Toast.makeText(this,"Updated Successful!", Toast.LENGTH_LONG).show()
-                                val intent = Intent(this, SettingActivity::class.java)
-                                intent.putExtra("getID",custID)
-                                startActivity(intent)
-                                boolean = true
-                            }
-                        }
+            } else {
+                for (it in Database.customers) {
+                    if (custID == it.getID() && currentPass == it.getPassword()) {
+                        Database.db.collection("Customer").document(custID)
+                            .update(
+                                "Password", newPass,
+                                "ConfirmPass", newConfPass
+                            )
+                        Toast.makeText(this, "Updated Successful!", Toast.LENGTH_LONG).show()
+                        val intent = Intent(this, SettingActivity::class.java)
+                        intent.putExtra("getID", custID)
+                        boolean = true
+                        startActivity(intent)
+                    } else {
+                        boolean = false
                     }
                 }
-                if(boolean){
-                    Toast.makeText(this, "Please Enter Correct Current Password.", Toast.LENGTH_SHORT).show()
-                    binding.editCurrentPassword.requestFocus()
-                }
+            }
+            if (!boolean) {
+                Toast.makeText(this, "Please Enter Correct Current Password.", Toast.LENGTH_SHORT)
+                    .show()
+                binding.editCurrentPassword.requestFocus()
             }
         }
 
+
+
         binding.backToSArrow.setOnClickListener {
             val intent = Intent(this, SettingActivity::class.java)
-            intent.putExtra("getID",custID)
+            intent.putExtra("getID", custID)
             startActivity(intent)
         }
     }

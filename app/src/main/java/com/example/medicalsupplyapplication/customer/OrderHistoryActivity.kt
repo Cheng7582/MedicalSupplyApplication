@@ -6,7 +6,6 @@ import android.os.Bundle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.medicalsupplyapplication.Database
-//import com.example.medicalsupplyapplication.admin.ProductDetailsActivity
 import com.example.medicalsupplyapplication.databinding.ActivityOrderHistoryBinding
 import java.lang.Integer.parseInt
 

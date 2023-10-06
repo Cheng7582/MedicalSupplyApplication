@@ -34,27 +34,22 @@
                 android:textSize="18sp" />
         </com.google.android.material.appbar.MaterialToolbar>
 
-        <RelativeLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/search"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/my_toolbar"
             android:elevation="10dp">
 
-            <SearchView
-                android:id="@+id/searchbar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/white" />
-
             <Button
                 android:id="@+id/goAddAdminBtn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="340dp"
                 android:backgroundTint="@color/white"
-                android:text="add" />
-        </RelativeLayout>
+                android:text="add"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <LinearLayout
             android:layout_width="match_parent"

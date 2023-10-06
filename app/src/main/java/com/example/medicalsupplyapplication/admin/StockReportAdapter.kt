@@ -6,10 +6,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.example.medicalsupplyapplication.Database
 import com.example.medicalsupplyapplication.R
+import com.example.medicalsupplyapplication.database.model.Product
 
-class StockReportAdapter : RecyclerView.Adapter<StockReportAdapter.ViewHolder>() {
+class StockReportAdapter(var products: MutableList<Product>?) : RecyclerView.Adapter<StockReportAdapter.ViewHolder>() {
     companion object {
         private lateinit var ActivityActi: StockReportActivity
 
@@ -28,10 +28,10 @@ class StockReportAdapter : RecyclerView.Adapter<StockReportAdapter.ViewHolder>()
     }
 
     override fun onBindViewHolder(holder: StockReportAdapter.ViewHolder, position: Int) {
-        holder.id.text = Database.products[position].getID()
-        holder.name.text = Database.products[position].getName()
-        holder.qty.text = Database.products[position].getStock().toString()
-        if (Database.products[position].getStock() > 30) {
+        holder.id.text = products?.get(position)?.productID
+        holder.name.text = products?.get(position)?.productName
+        holder.qty.text = products?.get(position)?.stock.toString()
+        if (products?.get(position)?.stock?:0 > 30) {
             holder.status.text = "Available"
             holder.status.setTextColor(Color.GREEN)
 
@@ -42,7 +42,14 @@ class StockReportAdapter : RecyclerView.Adapter<StockReportAdapter.ViewHolder>()
     }
 
     override fun getItemCount(): Int {
-        return Database.products.size
+        return products?.size?:0
+    }
+
+    fun updateData(newProducts: MutableList<Product>?) {
+        products?.clear()
+        products = newProducts
+
+        notifyDataSetChanged()
     }
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

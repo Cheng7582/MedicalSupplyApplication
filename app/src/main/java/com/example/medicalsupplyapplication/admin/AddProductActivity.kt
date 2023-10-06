@@ -76,13 +76,15 @@ class AddProductActivity : AppCompatActivity() {
 
         binding.addProdBtn.setOnClickListener {
             val prodName = binding.addProdName.text.toString()
-            val prodPrice = Integer.parseInt(binding.addProdPrice.text.toString())
-            val prodStock = Integer.parseInt(binding.addProdStock.text.toString())
+            val prodPrice = binding.addProdPrice.text.toString()
+            val prodStock = binding.addProdStock.text.toString()
             val prodDesc = binding.addProdDesc.text.toString()
             val category = spinner.selectedItem.toString()
             val brand = binding.addBrand.text.toString()
             val fileName = "$prodID.jpg"
             val storageReference = FirebaseStorage.getInstance().getReference("Product/$fileName")
+            val regex = Regex("^[1-9]\\d*\$")
+
 
             if (!::ImageUri.isInitialized) {
                 Toast.makeText(this, "Please Upload Image First.", Toast.LENGTH_SHORT).show()
@@ -90,11 +92,11 @@ class AddProductActivity : AppCompatActivity() {
             } else if (prodName == "") {
                 Toast.makeText(this, "Please Enter Product Name.", Toast.LENGTH_SHORT).show()
                 binding.addProdName.requestFocus()
-            } else if (prodPrice.toString() == "") {
-                Toast.makeText(this, "Please Enter Product Price.", Toast.LENGTH_SHORT).show()
+            } else if (prodPrice == "" || !regex.matches(prodPrice)) {
+                Toast.makeText(this, "Please Enter Valid Product Price.", Toast.LENGTH_SHORT).show()
                 binding.addProdPrice.requestFocus()
-            } else if (prodStock.toString() == "") {
-                Toast.makeText(this, "Please Enter Product Stock.", Toast.LENGTH_SHORT).show()
+            } else if (prodStock == "" || !regex.matches(prodStock)) {
+                Toast.makeText(this, "Please Enter Valid Product Stock.", Toast.LENGTH_SHORT).show()
                 binding.addProdStock.requestFocus()
             } else if (prodDesc == "") {
                 Toast.makeText(this, "Please Enter Product Description.", Toast.LENGTH_SHORT).show()
@@ -106,8 +108,8 @@ class AddProductActivity : AppCompatActivity() {
                 Database.addProduct(
                     prodID,
                     prodName,
-                    prodPrice,
-                    prodStock,
+                    Integer.parseInt(prodPrice),
+                    Integer.parseInt(prodStock),
                     prodDesc,
                     brand,
                     category
